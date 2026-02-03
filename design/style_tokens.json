@@ -1,0 +1,32 @@
+{
+  "colors": {
+    "ink": "#14131a",
+    "muted": "#5f6672",
+    "accent": "#ff7a59",
+    "accentDark": "#e35a3b",
+    "brand": "#243b64",
+    "brandDeep": "#0f1c33",
+    "card": "#ffffff",
+    "edge": "rgba(20,19,26,0.08)",
+    "backgroundBase": "#070814"
+  },
+  "typography": {
+    "display": "Fraunces",
+    "body": "Plus Jakarta Sans",
+    "h1": "clamp(2.2rem, 2.4vw, 2.9rem)",
+    "h2": "1.6rem",
+    "subtitle": "1.28rem",
+    "bodyText": "1rem"
+  },
+  "radii": {
+    "card": 20,
+    "header": 22,
+    "pill": 999
+  },
+  "spacing": {
+    "pagePadding": 40,
+    "headerPadding": "28 32 24",
+    "cardPadding": "24 24",
+    "gridGap": 18
+  }
+}
