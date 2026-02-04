@@ -11,11 +11,11 @@ from functools import wraps
 from uuid import uuid4
 
 try:
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
+    import psycopg
+    from psycopg.rows import dict_row
 except Exception:
-    psycopg2 = None
-    RealDictCursor = None
+    psycopg = None
+    dict_row = None
 
 app = Flask(__name__)
 
@@ -34,8 +34,8 @@ def _is_postgres_url(url):
     return url.startswith('postgres://') or url.startswith('postgresql://')
 
 IS_POSTGRES = _is_postgres_url(DATABASE)
-if IS_POSTGRES and psycopg2 is None:
-    raise RuntimeError('PostgreSQL DATABASE_URL set but psycopg2 is not installed.')
+if IS_POSTGRES and psycopg is None:
+    raise RuntimeError('PostgreSQL DATABASE_URL set but psycopg is not installed.')
 
 def _translate_sql(sql):
     if IS_POSTGRES:
@@ -99,7 +99,7 @@ Path(UPLOAD_FOLDER).mkdir(exist_ok=True)
 def get_db():
     """Create a database connection"""
     if IS_POSTGRES:
-        conn = psycopg2.connect(DATABASE, cursor_factory=RealDictCursor)
+        conn = psycopg.connect(DATABASE, row_factory=dict_row)
     else:
         conn = sqlite3.connect(DATABASE)
         conn.row_factory = sqlite3.Row
