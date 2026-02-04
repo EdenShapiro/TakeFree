@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from functools import wraps
 from uuid import uuid4
+import cloudinary
+import cloudinary.uploader
 
 try:
     import psycopg
@@ -28,6 +30,10 @@ if os.environ.get('SESSION_COOKIE_SECURE', '').lower() == 'true':
     app.config['SESSION_COOKIE_SECURE'] = True
 DATABASE = os.environ.get('DATABASE_URL', 'props_database.db')
 GATE_PASSWORD = os.environ.get('GATE_PASSWORD', 'sasquatch')
+USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL'))
+
+if USE_CLOUDINARY:
+    cloudinary.config(secure=True)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -148,6 +154,7 @@ def init_db():
                 description TEXT,
                 location TEXT NOT NULL,
                 image_path TEXT,
+                image_public_id TEXT,
                 user_id INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -162,12 +169,22 @@ def init_db():
                 description TEXT,
                 location TEXT NOT NULL,
                 image_path TEXT,
+                image_public_id TEXT,
                 user_id INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+
+    # Backfill column for existing DBs
+    try:
+        if IS_POSTGRES:
+            db.execute('ALTER TABLE items ADD COLUMN IF NOT EXISTS image_public_id TEXT')
+        else:
+            db.execute('ALTER TABLE items ADD COLUMN image_public_id TEXT')
+    except Exception:
+        pass
     
     db.commit()
     db.close()
@@ -401,6 +418,7 @@ def get_items():
             'description': item['description'],
             'location': item['location'],
             'image_path': item['image_path'],
+            'image_public_id': item.get('image_public_id') if isinstance(item, dict) else item['image_public_id'],
             'owner_name': item['owner_name'],
             'owner_contact': item['owner_contact'],
             'owner_avatar': item['owner_avatar'],
@@ -430,32 +448,38 @@ def add_item():
         
         # Handle image upload
         image_path = None
+        image_public_id = None
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename and allowed_file(file.filename):
-                # Create a unique filename
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                safe_name = secure_filename(file.filename)
-                extension = Path(safe_name).suffix.lower()
-                filename = f"{timestamp}_{uuid4().hex}{extension}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                image_path = filename
+                if USE_CLOUDINARY:
+                    upload = cloudinary.uploader.upload(file, folder='takefree')
+                    image_path = upload.get('secure_url')
+                    image_public_id = upload.get('public_id')
+                else:
+                    # Create a unique filename
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    safe_name = secure_filename(file.filename)
+                    extension = Path(safe_name).suffix.lower()
+                    filename = f"{timestamp}_{uuid4().hex}{extension}"
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    file.save(filepath)
+                    image_path = filename
         
         # Insert into database
         db = get_db()
         if IS_POSTGRES:
             cursor = db.execute(
-                '''INSERT INTO items (name, description, location, image_path, user_id)
-                   VALUES (?, ?, ?, ?, ?) RETURNING id''',
-                (name, description, location, image_path, session['user_id'])
+                '''INSERT INTO items (name, description, location, image_path, image_public_id, user_id)
+                   VALUES (?, ?, ?, ?, ?, ?) RETURNING id''',
+                (name, description, location, image_path, image_public_id, session['user_id'])
             )
             item_id = cursor.fetchone()['id']
         else:
             cursor = db.execute(
-                '''INSERT INTO items (name, description, location, image_path, user_id)
-                   VALUES (?, ?, ?, ?, ?)''',
-                (name, description, location, image_path, session['user_id'])
+                '''INSERT INTO items (name, description, location, image_path, image_public_id, user_id)
+                   VALUES (?, ?, ?, ?, ?, ?)''',
+                (name, description, location, image_path, image_public_id, session['user_id'])
             )
             item_id = cursor.lastrowid
         db.commit()
@@ -500,30 +524,39 @@ def update_item(item_id):
         
         # Handle image upload
         image_path = item['image_path']  # Keep existing image by default
+        image_public_id = item['image_public_id']
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename and allowed_file(file.filename):
                 # Delete old image if it exists
-                if item['image_path']:
+                if item['image_public_id']:
+                    cloudinary.uploader.destroy(item['image_public_id'])
+                elif item['image_path']:
                     old_image_path = os.path.join(UPLOAD_FOLDER, item['image_path'])
                     if os.path.exists(old_image_path):
                         os.remove(old_image_path)
                 
-                # Save new image
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                safe_name = secure_filename(file.filename)
-                extension = Path(safe_name).suffix.lower()
-                filename = f"{timestamp}_{uuid4().hex}{extension}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                image_path = filename
+                if USE_CLOUDINARY:
+                    upload = cloudinary.uploader.upload(file, folder='takefree')
+                    image_path = upload.get('secure_url')
+                    image_public_id = upload.get('public_id')
+                else:
+                    # Save new image
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    safe_name = secure_filename(file.filename)
+                    extension = Path(safe_name).suffix.lower()
+                    filename = f"{timestamp}_{uuid4().hex}{extension}"
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    file.save(filepath)
+                    image_path = filename
+                    image_public_id = None
         
         # Update database
         db.execute(
             '''UPDATE items 
-               SET name = ?, description = ?, location = ?, image_path = ?, updated_at = CURRENT_TIMESTAMP
+               SET name = ?, description = ?, location = ?, image_path = ?, image_public_id = ?, updated_at = CURRENT_TIMESTAMP
                WHERE id = ?''',
-            (name, description, location, image_path, item_id)
+            (name, description, location, image_path, image_public_id, item_id)
         )
         db.commit()
         db.close()
@@ -556,7 +589,9 @@ def delete_item(item_id):
             return jsonify({'error': 'You can only delete your own items'}), 403
         
         # Delete the image file if it exists
-        if item['image_path']:
+        if item['image_public_id']:
+            cloudinary.uploader.destroy(item['image_public_id'])
+        elif item['image_path']:
             image_path = os.path.join(UPLOAD_FOLDER, item['image_path'])
             if os.path.exists(image_path):
                 os.remove(image_path)

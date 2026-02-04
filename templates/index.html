@@ -1027,7 +1027,7 @@
             container.innerHTML = '<div class="items-grid">' + items.map(item => `
                 <div class="item-card" onclick="openDetailModal(${item.id})">
                     ${item.image_path 
-                        ? `<img src="/uploads/${item.image_path}" alt="${item.name}" class="item-image">`
+                        ? `<img src="${item.image_path.startsWith('http') ? item.image_path : `/uploads/${item.image_path}`}" alt="${item.name}" class="item-image">`
                         : '<div class="item-image no-image">📦</div>'
                     }
                     <div class="item-content">
@@ -1168,10 +1168,11 @@
                 // Show current image if exists
                 const currentImageContainer = document.getElementById('currentImageContainer');
                 if (item.image_path) {
+                    const imageSrc = item.image_path.startsWith('http') ? item.image_path : `/uploads/${item.image_path}`;
                     currentImageContainer.innerHTML = `
                         <div style="margin-bottom: 10px;">
                             <strong>Current photo:</strong><br>
-                            <img src="/uploads/${item.image_path}" class="current-image" alt="${item.name}">
+                            <img src="${imageSrc}" class="current-image" alt="${item.name}">
                         </div>
                     `;
                 } else {
@@ -1213,7 +1214,7 @@
 
                 const content = document.getElementById('detailContent');
                 const imageHtml = item.image_path
-                    ? `<img src="/uploads/${item.image_path}" alt="${escapeHtml(item.name)}" class="detail-image">`
+                    ? `<img src="${item.image_path.startsWith('http') ? item.image_path : `/uploads/${item.image_path}`}" alt="${escapeHtml(item.name)}" class="detail-image">`
                     : `<div class="detail-image item-image no-image">📦</div>`;
 
                 content.innerHTML = `

@@ -135,6 +135,7 @@ This application includes production-grade security:
 - **Auth**: OAuth via Authlib (Google; Discord/Facebook optional)
 - **Database**: Neon Postgres (production), SQLite (local dev)
 - **Hosting**: Render (web service)
+- **Image Storage**: Cloudinary
 - **Domain/DNS**: Cloudflare
 
 ### Security Best Practices
