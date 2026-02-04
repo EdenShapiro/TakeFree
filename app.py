@@ -223,13 +223,21 @@ def get_or_create_user(oauth_provider, oauth_id, email, full_name, avatar_url=No
         user_id = user['id']
     else:
         # Create new user
-        cursor = db.execute(
-            '''INSERT INTO users (oauth_provider, oauth_id, email, full_name, avatar_url)
-               VALUES (?, ?, ?, ?, ?)''',
-            (oauth_provider, oauth_id, email, full_name, avatar_url)
-        )
+        if IS_POSTGRES:
+            cursor = db.execute(
+                '''INSERT INTO users (oauth_provider, oauth_id, email, full_name, avatar_url)
+                   VALUES (?, ?, ?, ?, ?) RETURNING id''',
+                (oauth_provider, oauth_id, email, full_name, avatar_url)
+            )
+            user_id = cursor.fetchone()['id']
+        else:
+            cursor = db.execute(
+                '''INSERT INTO users (oauth_provider, oauth_id, email, full_name, avatar_url)
+                   VALUES (?, ?, ?, ?, ?)''',
+                (oauth_provider, oauth_id, email, full_name, avatar_url)
+            )
+            user_id = cursor.lastrowid
         db.commit()
-        user_id = cursor.lastrowid
     
     db.close()
     return user_id
@@ -412,13 +420,21 @@ def add_item():
         
         # Insert into database
         db = get_db()
-        cursor = db.execute(
-            '''INSERT INTO items (name, description, location, image_path, user_id)
-               VALUES (?, ?, ?, ?, ?)''',
-            (name, description, location, image_path, session['user_id'])
-        )
+        if IS_POSTGRES:
+            cursor = db.execute(
+                '''INSERT INTO items (name, description, location, image_path, user_id)
+                   VALUES (?, ?, ?, ?, ?) RETURNING id''',
+                (name, description, location, image_path, session['user_id'])
+            )
+            item_id = cursor.fetchone()['id']
+        else:
+            cursor = db.execute(
+                '''INSERT INTO items (name, description, location, image_path, user_id)
+                   VALUES (?, ?, ?, ?, ?)''',
+                (name, description, location, image_path, session['user_id'])
+            )
+            item_id = cursor.lastrowid
         db.commit()
-        item_id = cursor.lastrowid
         db.close()
         
         return jsonify({
