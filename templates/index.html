@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Props & Items Database</title>
+    <title>The Big Database of Stuff</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap');
 
@@ -237,6 +237,75 @@
             .header-content {
                 grid-template-columns: 1fr;
                 gap: 12px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 18px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            header {
+                padding: 22px 20px;
+                border-radius: 18px;
+            }
+
+            .user-float {
+                position: static;
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 12px;
+            }
+
+            .header-content {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                text-align: left;
+            }
+
+            h1 {
+                font-size: 2rem;
+                line-height: 1.1;
+            }
+
+            .subtitle {
+                font-size: 1.05em;
+                margin-top: 0;
+            }
+
+            .subtitle-detail {
+                text-align: left;
+                max-width: 100%;
+            }
+
+            .main-content {
+                gap: 18px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 16px;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #itemsContainer {
+                max-height: none;
+                padding-right: 0;
+            }
+
+            #itemsContainer .items-grid {
+                padding-bottom: 0;
+            }
+
+            .item-image {
+                height: 170px;
             }
         }
 

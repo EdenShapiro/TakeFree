@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Props Database - Sign In</title>
+    <title>The Big Database of Stuff - Sign In</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap');
 
@@ -94,6 +94,34 @@
             position: relative;
             overflow: hidden;
             z-index: 1;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 20px;
+            }
+
+            .auth-container {
+                padding: 28px 22px;
+                border-radius: 18px;
+            }
+
+            .logo h1 {
+                font-size: 3em;
+            }
+
+            .logo .title {
+                font-size: 1.7em;
+            }
+
+            .signin-header h2 {
+                font-size: 1.6em;
+            }
+
+            .oauth-btn {
+                padding: 12px 16px;
+                font-size: 1em;
+            }
         }
 
         .auth-container::before {
@@ -309,7 +337,7 @@
     <div class="auth-container">
         <div class="logo">
             <h1>🎭</h1>
-            <div class="title">Props Database</div>
+            <div class="title">The Big Database of Stuff</div>
             <p>Track and share props across your organization</p>
         </div>
 
@@ -330,24 +358,7 @@
             </a>
         </div>
 
-        <div class="divider">
-            <span>Why sign in?</span>
-        </div>
-
-        <div class="info-box">
-            <h3>Secure & Simple</h3>
-            <ul>
-                <li>No passwords to remember</li>
-                <li>Your existing account keeps you secure</li>
-                <li>One click to sign in</li>
-                <li>Track items you own</li>
-                <li>Search everyone's props</li>
-            </ul>
-        </div>
-
-        <div class="note">
-            <p><strong>Note:</strong> To enable sign-in, the administrator needs to configure OAuth credentials for these services. See deployment documentation for setup instructions.</p>
-        </div>
+        
     </div>
 </body>
 </html>
