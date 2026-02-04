@@ -246,11 +246,10 @@ def get_or_create_user(oauth_provider, oauth_id, email, full_name, avatar_url=No
 
 @app.route('/')
 def index():
-    """Serve the main page or login page"""
-    if 'user_id' not in session:
-        return render_template('login.html')
-    csrf_token = get_csrf_token()
-    return render_template('index.html', csrf_token=csrf_token)
+    """Serve the main page for all users"""
+    logged_in = 'user_id' in session
+    csrf_token = get_csrf_token() if logged_in else ''
+    return render_template('index.html', csrf_token=csrf_token, logged_in=logged_in)
 
 @app.route('/login/<provider>')
 def login(provider):
@@ -316,29 +315,31 @@ def logout():
     return jsonify({'message': 'Logged out successfully'}), 200
 
 @app.route('/api/current-user', methods=['GET'])
-@login_required
 def current_user():
-    """Get current logged in user info"""
+    """Get current logged in user info (or null if anonymous)"""
+    if 'user_id' not in session:
+        return jsonify({'user': None}), 200
     db = get_db()
     user = db.execute('SELECT id, email, full_name, avatar_url, oauth_provider FROM users WHERE id = ?', 
                      (session['user_id'],)).fetchone()
     db.close()
     
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify({'user': None}), 200
     
     return jsonify({
-        'id': user['id'],
-        'email': user['email'],
-        'full_name': user['full_name'],
-        'avatar_url': user['avatar_url'],
-        'provider': user['oauth_provider']
+        'user': {
+            'id': user['id'],
+            'email': user['email'],
+            'full_name': user['full_name'],
+            'avatar_url': user['avatar_url'],
+            'provider': user['oauth_provider']
+        }
     }), 200
 
 # ============= Items Routes =============
 
 @app.route('/api/items', methods=['GET'])
-@login_required
 def get_items():
     """Get all items or search items"""
     search_query = request.args.get('search', '').strip()
@@ -381,7 +382,7 @@ def get_items():
             'owner_contact': item['owner_contact'],
             'owner_avatar': item['owner_avatar'],
             'user_id': item['user_id'],
-            'is_owner': item['user_id'] == session['user_id'],
+            'is_owner': ('user_id' in session and item['user_id'] == session['user_id']),
             'created_at': item['created_at'],
             'updated_at': item['updated_at']
         })
