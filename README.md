@@ -128,6 +128,15 @@ This application includes production-grade security:
 ✅ **Environment variable configuration**  
 ✅ **HTTPS ready** for deployment
 
+## 🧰 Stack & Hosting
+
+- **Backend**: Python + Flask
+- **Frontend**: HTML/CSS + vanilla JS (server-rendered templates)
+- **Auth**: OAuth via Authlib (Google; Discord/Facebook optional)
+- **Database**: Neon Postgres (production), SQLite (local dev)
+- **Hosting**: Render (web service)
+- **Domain/DNS**: Cloudflare
+
 ### Security Best Practices
 
 When deploying to production:
