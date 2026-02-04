@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter Password</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap');
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Alexandria', system-ui, -apple-system, sans-serif;
+            background:
+                radial-gradient(1000px 600px at 12% 18%, rgba(255, 0, 200, 0.28), transparent 62%),
+                radial-gradient(900px 520px at 88% 8%, rgba(0, 210, 255, 0.26), transparent 60%),
+                radial-gradient(700px 520px at 78% 70%, rgba(255, 140, 0, 0.22), transparent 65%),
+                radial-gradient(680px 520px at 18% 76%, rgba(140, 80, 255, 0.22), transparent 65%),
+                linear-gradient(160deg, #070814 0%, #12163a 45%, #1b0f2f 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .gate {
+            text-align: center;
+            padding: 28px 26px;
+            border-radius: 20px;
+            background: rgba(10, 12, 26, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .gate .symbol {
+            font-size: 2.4em;
+            margin-bottom: 12px;
+        }
+
+        .gate h1 {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .gate form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .gate input {
+            flex: 1;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1em;
+        }
+
+        .gate input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .gate button {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #111;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .error {
+            margin-top: 12px;
+            color: #ffb3b3;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="gate">
+        <div class="symbol">✦</div>
+        <h1>Enter password to continue</h1>
+        <form method="POST" action="/gate">
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">→</button>
+        </form>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

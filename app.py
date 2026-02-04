@@ -27,6 +27,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = os.environ.get('SESSION_COOKIE_SAMESITE'
 if os.environ.get('SESSION_COOKIE_SECURE', '').lower() == 'true':
     app.config['SESSION_COOKIE_SECURE'] = True
 DATABASE = os.environ.get('DATABASE_URL', 'props_database.db')
+GATE_PASSWORD = os.environ.get('GATE_PASSWORD', 'sasquatch')
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -184,6 +185,15 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def gate_required(f):
+    """Require the shared gate password before viewing the app."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('gate_ok'):
+            return redirect(url_for('gate'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 def get_csrf_token():
     token = session.get('csrf_token')
     if not token:
@@ -245,11 +255,22 @@ def get_or_create_user(oauth_provider, oauth_id, email, full_name, avatar_url=No
 # ============= Authentication Routes =============
 
 @app.route('/')
+@gate_required
 def index():
     """Serve the main page for all users"""
     logged_in = 'user_id' in session
     csrf_token = get_csrf_token() if logged_in else ''
     return render_template('index.html', csrf_token=csrf_token, logged_in=logged_in)
+
+@app.route('/gate', methods=['GET', 'POST'])
+def gate():
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if password == GATE_PASSWORD:
+            session['gate_ok'] = True
+            return redirect(url_for('index'))
+        return render_template('gate.html', error='Incorrect password')
+    return render_template('gate.html', error=None)
 
 @app.route('/login/<provider>')
 def login(provider):
@@ -315,6 +336,7 @@ def logout():
     return jsonify({'message': 'Logged out successfully'}), 200
 
 @app.route('/api/current-user', methods=['GET'])
+@gate_required
 def current_user():
     """Get current logged in user info (or null if anonymous)"""
     if 'user_id' not in session:
@@ -340,6 +362,7 @@ def current_user():
 # ============= Items Routes =============
 
 @app.route('/api/items', methods=['GET'])
+@gate_required
 def get_items():
     """Get all items or search items"""
     search_query = request.args.get('search', '').strip()
